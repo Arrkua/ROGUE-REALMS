@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
+<defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="#08130f"/><stop offset="1" stop-color="#182b1e"/></linearGradient><radialGradient id="mist"><stop stop-color="#78947c" stop-opacity=".20"/><stop offset="1" stop-color="#78947c" stop-opacity="0"/></radialGradient></defs>
+<rect width="1200" height="700" fill="url(#g)"/>
+<ellipse cx="600" cy="330" rx="500" ry="230" fill="url(#mist)"/>
+<!-- distant trees -->
+<g opacity=".65" fill="#0b1b14">
+<path d="M80 0h90l-20 170h70l-105 170L10 170h70z"/><path d="M260 30h70l-15 150h55l-85 140-85-140h55z"/><path d="M980 0h95l-15 175h65L1015 350 900 175h65z"/><path d="M1120 40h55l-12 140h37l-70 120-70-120h40z"/>
+</g>
+<!-- ground --> <path d="M0 430 Q300 390 600 430 T1200 420V700H0Z" fill="#14271b"/>
+<!-- foreground trunks -->
+<g fill="#101b14">
+<path d="M0 0h115l-18 310 70 180-75-25-35 55-18-190z"/><path d="M1085 0h115v330l-35 210-45-55-75 35 45-190z"/>
+<path d="M190 0h55l-8 330-35 80-25-100z"/><path d="M955 0h55l10 330 25 90-50-55z"/>
+</g>
+<g fill="#213c26" opacity=".9"><circle cx="75" cy="100" r="75"/><circle cx="180" cy="80" r="70"/><circle cx="1020" cy="90" r="85"/><circle cx="1130" cy="120" r="90"/><circle cx="310" cy="115" r="55"/><circle cx="890" cy="120" r="60"/></g>
+<!-- three paths -->
+<path d="M520 700 L475 700 Q500 575 455 445 L500 420 Q555 565 575 700Z" fill="#725b3d"/>
+<path d="M680 700 L625 700 Q645 555 600 420 L650 420 Q700 560 705 700Z" fill="#725b3d"/>
+<path d="M820 700 L765 700 Q745 560 695 445 L740 420 Q805 555 820 700Z" fill="#725b3d"/>
+<path d="M505 700 Q535 590 490 445 M655 700 Q680 570 625 420 M790 700 Q775 570 720 445" fill="none" stroke="#967851" stroke-width="7" opacity=".45"/>
+</svg>

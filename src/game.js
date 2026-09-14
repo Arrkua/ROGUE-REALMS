@@ -2,30 +2,30 @@ const $ = id => document.getElementById(id);
 
 const state = {
   level: 1, xp: 0, xpNext: 50, power: 0,
-  maxHp: 100, hp: 100,
+  maxHp: 100, hp: 100, rage: 0, maxRage: 100,
   mapIndex: 0, unlocked: [0], cleared: [],
   enemy: null, turn: 0, stunned: false,
-  pendingLevelUps: 0, rewardClaimed: false
+  pendingLevelUps: 0, rewardClaimed: false, zoneCleared:false
 };
 
 const screens = { map: $('mapScreen'), battle: $('battleScreen'), reward: $('rewardScreen') };
 
-// Branching route: every cleared node unlocks the next row.
-const rows = [
-  [{id:0,t:'fight',icon:'⚔️',name:'COMBATE',desc:'Enemigo normal'}],
-  [{id:1,t:'fight',icon:'⚔️',name:'COMBATE',desc:'Enemigo normal'},{id:2,t:'elite',icon:'👹',name:'ÉLITE',desc:'Mejor recompensa'}],
-  [{id:3,t:'event',icon:'❓',name:'EVENTO',desc:'Una decisión'},{id:4,t:'rest',icon:'💤',name:'DESCANSO',desc:'Recupera HP'},{id:5,t:'fight',icon:'⚔️',name:'COMBATE',desc:'Enemigo normal'}],
-  [{id:6,t:'fight',icon:'⚔️',name:'COMBATE',desc:'Enemigo normal'},{id:7,t:'elite',icon:'👹',name:'ÉLITE',desc:'Riesgo / premio'}],
-  [{id:8,t:'fight',icon:'⚔️',name:'COMBATE',desc:'Enemigo normal'},{id:9,t:'rest',icon:'💤',name:'DESCANSO',desc:'Recupera HP'}],
-  [{id:10,t:'boss',icon:'👑',name:'JEFE',desc:'Guardián del bosque'}]
+// Each step offers three visible paths in the forest. After choosing one, the game returns here.
+const pathPool = [
+  {t:'fight',icon:'⚔️',name:'COMBATE',desc:'Enemigo normal'},
+  {t:'elite',icon:'👹',name:'ÉLITE',desc:'Riesgo · mejor recompensa'},
+  {t:'event',icon:'❓',name:'EVENTO',desc:'Una decisión misteriosa'},
+  {t:'rest',icon:'💤',name:'DESCANSO',desc:'Recupera 30% de HP'},
+  {t:'fight',icon:'⚔️',name:'COMBATE',desc:'Enemigo normal'},
+  {t:'elite',icon:'👹',name:'ÉLITE',desc:'Riesgo · mejor recompensa'}
 ];
-const links = {0:[1,2],1:[3,4,5],2:[3,4,5],3:[6,7],4:[6,7],5:[6,7],6:[8,9],7:[8,9],8:[10],9:[10]};
+let pathSerial=1;
 
 function updateHud(){
   $('level').textContent=state.level;
   $('xp').textContent=state.xp;
   $('xpNext').textContent=state.xpNext;
-  $('power').textContent=state.power;
+  $('power').textContent=state.power; $('rage').textContent=state.rage;
 }
 function show(screen){Object.values(screens).forEach(s=>s.classList.add('hidden'));screen.classList.remove('hidden');}
 function unlockFrom(id){(links[id]||[]).forEach(x=>{if(!state.unlocked.includes(x))state.unlocked.push(x);});}
@@ -33,18 +33,19 @@ function unlockFrom(id){(links[id]||[]).forEach(x=>{if(!state.unlocked.includes(
 function renderMap(){
   updateHud();
   const m=$('map'); m.innerHTML='';
-  rows.forEach(row=>{
-    const r=document.createElement('div'); r.className='row';
-    row.forEach(n=>{
-      const b=document.createElement('button');
-      const unlocked=state.unlocked.includes(n.id), done=state.cleared.includes(n.id);
-      b.className=`node ${n.t} ${done?'done':''} ${unlocked&&!done?'available':''}`;
-      b.disabled=!unlocked||done;
-      b.innerHTML=`<span class="icon">${n.icon}</span><span class="type">${n.name}</span><small>${n.desc}</small>`;
-      b.onclick=()=>selectNode(n);
-      r.appendChild(b);
-    });
-    m.appendChild(r);
+  let choices;
+  if(state.zoneCleared){
+    choices=[{t:'boss',icon:'👑',name:'JEFE',desc:'Guardián de la nueva zona'}, {t:'fight',icon:'⚔️',name:'COMBATE',desc:'Prepara tu build'}, {t:'rest',icon:'💤',name:'DESCANSO',desc:'Recupera 30% de HP'}];
+    state.zoneCleared=false;
+  } else {
+    choices=[0,1,2].map(()=>({...pathPool[Math.floor(Math.random()*pathPool.length)],id:pathSerial++}));
+  }
+  choices.forEach(n=>{
+    const b=document.createElement('button');
+    b.className=`pathChoice ${n.t}`;
+    b.innerHTML=`<span class="pathIcon">${n.icon}</span><span class="pathType">${n.name}</span><small>${n.desc}</small>`;
+    b.onclick=()=>selectNode(n);
+    m.appendChild(b);
   });
 }
 
@@ -60,7 +61,7 @@ function selectNode(n){
     showEventMessage(`Encuentras un antiguo altar. Ganas ${gain} XP.`);
   }
 }
-function finishNode(id){if(!state.cleared.includes(id))state.cleared.push(id);unlockFrom(id);}
+function finishNode(id){if(!state.cleared.includes(id))state.cleared.push(id);}
 function showEventMessage(text){
   // Non-blocking message; it never creates a second reward button.
   $('log').textContent=text;
@@ -78,15 +79,22 @@ function startBattle(n){
 }
 
 const attacks=[
-  ['Golpe',18,'Daño directo'],['Tajo pesado',30,'Gran daño'],['Golpe aturdidor',14,'Aturde al enemigo'],['Segundo aliento',-22,'Recupera 22 HP']
+  {name:'Golpe',damage:18,cost:0,gain:10,desc:'Daño directo · genera Furia'},
+  {name:'Tajo pesado',damage:30,cost:25,gain:0,desc:'Gran daño'},
+  {name:'Golpe aturdidor',damage:14,cost:15,gain:5,desc:'Aturde al enemigo'},
+  {name:'Segundo aliento',heal:22,cost:20,gain:0,desc:'Recupera 22 HP'}
 ];
 function renderAttacks(){
   const box=$('attacks'); box.innerHTML='';
   attacks.forEach((a,i)=>{
     const b=document.createElement('button'); b.className='attack';
-    b.innerHTML=`${a[0]}<small>${a[1]<0?'Curación '+(-a[1]):a[1]+' daño'} · ${a[2]}</small>`;
+    b.innerHTML=`${a.name}<small>${a.heal?`Curación ${a.heal}`:`${a.damage} daño`} · <span class="cost">${a.cost?`🔥 ${a.cost}`:'🔥 +'+a.gain}</span></small><small>${a.desc}</small>`;
     b.onclick=()=>playerAttack(i); box.appendChild(b);
   });
+  updateAttackAvailability();
+}
+function updateAttackAvailability(){
+  document.querySelectorAll('#attacks .attack').forEach((b,i)=>{b.disabled=state.rage<attacks[i].cost || $('attacks').dataset.locked==='1';});
 }
 function setAttacksDisabled(disabled){document.querySelectorAll('#attacks .attack').forEach(b=>b.disabled=disabled);}
 function updateBattle(){
@@ -98,16 +106,19 @@ function updateBattle(){
 function playerAttack(i){
   if(!state.enemy||$('attacks').dataset.locked==='1')return;
   const a=attacks[i];
-  if(a[1]<0){state.hp=Math.min(state.maxHp,state.hp-a[1]);$('log').textContent='Recuperas 22 HP.';}
-  else{const dmg=a[1]+state.power;state.enemy.hp=Math.max(0,state.enemy.hp-dmg);state.stunned=i===2;$('log').textContent=`Infliges ${dmg} de daño.`;}
+  if(state.rage<a.cost)return;
+  state.rage=Math.max(0,state.rage-a.cost);
+  state.rage=Math.min(state.maxRage,state.rage+a.gain);
+  if(a.heal){state.hp=Math.min(state.maxHp,state.hp+a.heal);$('log').textContent=`Recuperas ${a.heal} HP.`;}
+  else{const dmg=a.damage+state.power;state.enemy.hp=Math.max(0,state.enemy.hp-dmg);state.stunned=i===2;$('log').textContent=`Infliges ${dmg} de daño.`;}
   updateBattle();
   if(state.enemy.hp<=0){winBattle();return;}
-  setAttacksDisabled(true); setTimeout(()=>{enemyTurn(); if(state.enemy) setAttacksDisabled(false);},450);
+  setAttacksDisabled(true); setTimeout(()=>{enemyTurn(); if(state.enemy){setAttacksDisabled(false);updateAttackAvailability();}},450);
 }
 function enemyTurn(){
   if(!state.enemy)return;
   if(state.stunned){state.stunned=false;$('log').textContent='El enemigo queda aturdido y pierde el turno.';return;}
-  const dmg=state.enemy.dmg;state.hp=Math.max(0,state.hp-dmg);$('log').textContent=`${state.enemy.name} te golpea por ${dmg}.`;updateBattle();
+  const dmg=Math.max(1,state.enemy.dmg-(state.armor||0));state.hp=Math.max(0,state.hp-dmg);$('log').textContent=`${state.enemy.name} te golpea por ${dmg}.`;updateBattle();
   if(state.hp<=0)setTimeout(()=>{alert('Has caído. La expedición vuelve a empezar.');resetRun();},250);
 }
 
@@ -173,12 +184,12 @@ function claimBattleReward(effect,enemy){
   state.rewardClaimed=true;
   document.querySelectorAll('#rewards .rewardBtn').forEach(b=>b.disabled=true);
   effect(); $('rewards').innerHTML=''; state.rewardClaimed=false;
-  if(enemy && enemy.name.includes('GUARDIÁN')){alert('¡Has derrotado al jefe! La siguiente zona estará disponible en la próxima expansión.');}
+  if(enemy && enemy.name.includes('GUARDIÁN')){state.zoneCleared=true; alert('¡Has derrotado al jefe! El bosque se abre ante ti.');}
   show(screens.map);renderMap();
 }
 
 function resetRun(){
-  Object.assign(state,{level:1,xp:0,xpNext:50,power:0,maxHp:100,hp:100,mapIndex:0,unlocked:[0],cleared:[],enemy:null,turn:0,stunned:false,pendingLevelUps:0,rewardClaimed:false,armor:0});
+  Object.assign(state,{level:1,xp:0,xpNext:50,power:0,maxHp:100,hp:100,rage:0,maxRage:100,mapIndex:0,unlocked:[0],cleared:[],enemy:null,turn:0,stunned:false,pendingLevelUps:0,rewardClaimed:false,armor:0,zoneCleared:false});
   $('attacks').dataset.locked='0';renderMap();show(screens.map);updateHud();
 }
 
