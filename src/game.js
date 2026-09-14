@@ -32,20 +32,26 @@ function unlockFrom(id){(links[id]||[]).forEach(x=>{if(!state.unlocked.includes(
 
 function renderMap(){
   updateHud();
-  const m=$('map'); m.innerHTML='';
+  const m=$('map'), labels=$('roadLabels'); m.innerHTML=''; labels.innerHTML='';
   let choices;
   if(state.zoneCleared){
-    choices=[{t:'boss',icon:'👑',name:'JEFE',desc:'Guardián de la nueva zona'}, {t:'fight',icon:'⚔️',name:'COMBATE',desc:'Prepara tu build'}, {t:'rest',icon:'💤',name:'DESCANSO',desc:'Recupera 30% de HP'}];
+    choices=[{t:'boss',icon:'👑',name:'JEFE',desc:'Guardián de la nueva zona'},{t:'fight',icon:'⚔️',name:'COMBATE',desc:'Prepara tu build'},{t:'rest',icon:'💤',name:'DESCANSO',desc:'Recupera 30% de HP'}];
     state.zoneCleared=false;
   } else {
     choices=[0,1,2].map(()=>({...pathPool[Math.floor(Math.random()*pathPool.length)],id:pathSerial++}));
   }
-  choices.forEach(n=>{
-    const b=document.createElement('button');
-    b.className=`pathChoice ${n.t}`;
-    b.innerHTML=`<span class="pathIcon">${n.icon}</span><span class="pathType">${n.name}</span><small>${n.desc}</small>`;
-    b.onclick=()=>selectNode(n);
-    m.appendChild(b);
+  choices.forEach((n,i)=>{
+    const road=document.createElement('button');
+    road.className=`road road-${i+1} ${n.t}`;
+    road.setAttribute('aria-label',n.name);
+    road.onclick=()=>selectNode(n);
+    road.innerHTML='<span class="roadSurface"></span><span class="roadGlow"></span>';
+    m.appendChild(road);
+    const label=document.createElement('div');
+    label.className=`roadLabel label-${i+1} ${n.t}`;
+    label.innerHTML=`<span class="pathIcon">${n.icon}</span><strong>${n.name}</strong><small>${n.desc}</small>`;
+    label.onclick=()=>selectNode(n);
+    labels.appendChild(label);
   });
 }
 
