@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rogue Realms</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="game">
+<header><h1>ROGUE REALMS</h1><span id="run">RUN 1 · SALA 1</span></header>
+<section class="arena">
+<div class="panel player">
+<div class="sprite"><img src="assets/characters/warrior.svg" alt="Guerrero pixel art"></div>
+<h2>GUERRERO <small id="level">NV. 1</small></h2>
+<div class="bar"><i id="player-hp"></i></div>
+<p id="player-stats">100 / 100 HP · EXP 0 / 30</p>
+</div>
+<div class="panel enemy">
+<div class="sprite"><img id="enemy-sprite" src="assets/enemies/goblin.svg" alt="Enemigo pixel art"></div>
+<h2 id="enemy-name">GOBLIN</h2>
+<div class="bar"><i id="enemy-hp"></i></div>
+<p id="enemy-stats">70 / 70 HP</p>
+</div>
+</section>
+<div class="message" id="message">El enemigo aparece. Elige tu acción.</div>
+<section class="moves" id="moves"></section>
+<section class="reward hidden" id="reward"></section>
+</main>
+<script src="src/game.js"></script>
+</body>
+</html>
