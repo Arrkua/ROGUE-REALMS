@@ -151,7 +151,7 @@ function renderLevelUpReward(){
   const options=[
     ['⚔️','Fuerza +5','Aumenta el daño de todos tus ataques.',()=>state.power+=5],
     ['❤️','Vitalidad +20','Aumenta 20 la vida máxima y te cura.',()=>{state.maxHp+=20;state.hp=Math.min(state.maxHp,state.hp+20)}],
-    ['🔥','Furia máxima +20','Aumenta tu límite de Furia en 20 y llena la nueva capacidad.',()=>{state.maxRage+=20;state.rage=state.maxRage}],
+    ['🔥','Furia máxima +20','Aumenta tu Furia máxima en 20 y llena la nueva barra.',()=>{state.maxRage+=20;state.rage=state.maxRage}],
     ['🛡️','Fortaleza','Reduce en 2 el daño recibido.',()=>state.armor=(state.armor||0)+2]
   ];
   options.forEach(o=>{
