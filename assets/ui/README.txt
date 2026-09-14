@@ -1,1 +1,1 @@
-Carpeta reservada para iconos y elementos de interfaz pixel-art.
+UI assets can be added here later.
